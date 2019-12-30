@@ -1,34 +1,65 @@
-name: Python package
+# _*_ coding：UTF-8 _*_
 
-on: [push]
+from tkinter import *
+from tkinter.filedialog import askdirectory
+from aip import AipSpeech
+from tkinter import ttk
 
-jobs:
-  build:
 
-    runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: [2.7, 3.5, 3.6, 3.7]
+def selectPath():
+    path_ = askdirectory()
+    path.set(path_)
+    print(path_)
 
-    steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: Lint with flake8
-      run: |
-        pip install flake8
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        pip install pytest
-        pytest
+
+def Save():
+    switch = {'女声': 0,
+              '男声': 1,
+              '度逍遥': 3,
+              '度丫丫': 4,
+              }
+
+    lx = switch.get(number.get(), "0")
+    yuying(path.get(), pathmc.get(), pathnr.get(), lx)
+
+
+def yuying(url, title, contain, lx):
+    APP_ID = '18106384'  # 百度AI中获得
+    API_KEY = 'QgRkfhDU9F9Bfie2cuaeuMOp'
+    SECRET_KEY = 'vK10FVY0Iu0nH7HwYXSHPykGjB1kibv7'
+    client = AipSpeech(APP_ID, API_KEY, SECRET_KEY)
+    result = client.synthesis(contain, 'zh', 1, {
+        'vol': 5, 'per': lx, 'spd': 2,  # per   发音人选择, 0为女声，1为男声，3为情感合成-度逍遥，4为情感合成-度丫丫，默认为普通女    否
+    })
+    if not isinstance(result, dict):
+        with open(url + '\\' + title + '.mp3', 'wb') as f:
+            f.write(result)
+
+
+root = Tk()
+root.title('生成语音')
+path = StringVar()
+pathmc = StringVar()
+pathnr = StringVar()
+
+Label(root, text="保存路径:").grid(row=0, column=0)
+Entry(root, textvariable=path).grid(row=0, column=1)
+Button(root, text="路径选择", command=selectPath).grid(row=0, column=3)
+Label(root, text="语音名称:").grid(row=2, column=0)
+Entry(root, textvariable=pathmc).grid(row=2, column=1)
+Label(root, text="语音内容:").grid(row=3, column=0)
+Entry(root, textvariable=pathnr).grid(row=3, column=1)
+Button(root, text="保存", command=Save).grid(row=4, column=0)
+
+Label(root, text="声音类型:").grid(row=1, column=0)
+number = StringVar()
+
+numberChosen = ttk.Combobox(root, width=12, textvariable=number)
+
+numberChosen['values'] = ('女声', '男声', '度逍遥', '度丫丫')
+
+numberChosen.grid(column=1, row=1)
+
+numberChosen.current(0)
+
+root.mainloop()
